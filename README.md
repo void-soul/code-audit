@@ -46,7 +46,7 @@ You MUST process them **sequentially**. Do not attempt to audit all 8 in a singl
 At audit start, create a todo list with all 8 dimensions (D1–D8). Then for each:
 
 1. **Announce** — output `### Auditing D<N>: <name>`
-2. **Load** — call `skill_view(file_path='references/d<N>-<slug>.md')` to get the checklist
+2. **Load** — read `references/d<N>-<slug>.md` with your file-reading tool to get the checklist
 3. **Audit** — search the **entire codebase** against each item in that file (not just recent commits)
 4. **Report** — output findings for this dimension (use the template below)
 5. **Complete** — mark this dimension done in your todo list before moving to the next
@@ -189,45 +189,11 @@ The document MUST contain:
 
 ---
 
-## D8 — Architecture & Code Quality Details
+## D8 — Architecture & Code Quality
 
-### Dead Code Detection
-- Unused functions/methods (defined but never called)
-- Unused variables/constants (declared but never read)
-- Unused imports
-- Dead conditional branches (`if (false)`)
-- Abandoned API endpoints
-- Commented-out code blocks older than 3 months
+Audits **dead code, god files, architecture violations, and code duplication** — problems that "compile fine but should be refactored."
 
-**Tools:** `pyflakes`, `flake8 --select=F401,F841`, `tsc --noEmit`, ESLint `no-unused-vars`
-
-### God File/Class Detection
-| Metric | CRITICAL | HIGH | MEDIUM |
-|--------|----------|------|--------|
-| File lines | > 1000 | 500–1000 | 300–500 |
-| Cyclomatic complexity | > 50 | 20–50 | 10–20 |
-| Import count | > 30 | 15–30 | 10–15 |
-| Unrelated modules | > 5 | 3–5 | 2–3 |
-
-**Tools:** `radon cc`, ESLint `complexity`, `pydeps`, `madge`
-
-### Architecture Violations
-- Presentation → Infrastructure (bypassing Application layer)
-- Domain → Application (domain model depending on use cases)
-- Infrastructure → Presentation
-- Circular dependencies between modules
-- Tight coupling (too many cross-module imports)
-
-**Tools:** `madge --circular`, `pydeps --cluster`, manual import direction check
-
-### Code Duplication
-| Duplication | Severity |
-|-------------|----------|
-| 3+ identical code blocks | HIGH |
-| 2+ highly similar (>80%) | MEDIUM |
-| Slightly similar (60–80%) | LOW |
-
-**Tools:** `similard`, `dupfinder`
+> **Full checklist:** the complete D8 audit checklist with per-item grep commands and severity guidance lives in `references/d8-architecture.md`.
 
 ---
 

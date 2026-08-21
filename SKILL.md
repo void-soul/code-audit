@@ -1,7 +1,7 @@
 ---
 name: code-audit
-description: "Use when auditing or reviewing code beyond correctness — covers security, concurrency, observability, data, API contracts, and engineering practice. Produces structured audit document with fix task list and supports completing those tasks with result tracking. Designed for independent re-audit."
-version: 4.0.0
+description: "Use when auditing or reviewing code beyond correctness — covers security, concurrency, observability, data, API contracts, engineering practice, defensive details, and architecture. Produces structured audit document with fix task list and supports completing those tasks with result tracking. Designed for independent re-audit."
+version: 4.1.0
 author: Hermes Agent
 license: MIT
 platforms: [linux, macos, windows]
@@ -13,7 +13,7 @@ metadata:
 
 # Code Audit — Beyond Correctness
 
-A comprehensive code audit framework: 7 dimensions, processed **one at a time**.
+A comprehensive code audit framework: 8 dimensions, processed **one at a time**.
 Produces a structured audit document with a fix task list.
 Supports completing those tasks and updating the document with fix results.
 Designed for independent re-audit.
@@ -50,7 +50,7 @@ You MUST process them **sequentially**. Do not attempt to audit all 8 in a singl
 At audit start, create a todo list with all 8 dimensions (D1–D8). Then for each:
 
 1. **Announce** — output `### Auditing D<N>: <name>`
-2. **Load** — call `skill_view(file_path='references/d<N>-<slug>.md')` to get the checklist
+2. **Load** — read `references/d<N>-<slug>.md` with your file-reading tool to get the checklist
 3. **Audit** — search the codebase against each item in that file
 4. **Report** — output findings for this dimension (use the template below)
 5. **Complete** — mark this dimension done in your todo list before moving to the next
@@ -202,11 +202,14 @@ The document MUST contain:
 5. **Not generating the audit document.** Without this document, fix tracking and re-audit are impossible.
 6. **Updating code without updating the document.** The document is the single source of truth.
 7. **Auto-committing.** Let the user decide when to commit. Update the document only after user commits.
+8. **Mixing auxiliary tooling into core.** Dev-only scripts (doc updaters, scan tools, report generators) bundled inside the main binary rather than living as standalone scripts in `scripts/` — keeps the core lean and the build graph simple. Extract them out.
+9. **UI surface for non-core workflows.** Features that a normal user would never trigger from the main screen don't need a tab in the UI — give them their own CLI entry point or static site.
 
 ---
 
 ## Verification Checklist
 
+- [ ] **Audit Scope is ENTIRE CODEBASE** — not limited to recent commits or diff
 - [ ] Todo list created with all 8 dimensions at audit start
 - [ ] Each dimension's reference file loaded BEFORE auditing that dimension
 - [ ] Every dimension has explicit findings or "no issues — searched for X, Y, Z"
@@ -220,3 +223,5 @@ The document MUST contain:
 - [ ] Every task in the document has a unique ID and status
 - [ ] User asked about fix scope before proceeding with remediation
 - [ ] After user commits, document updated with commit hash + fix description
+- [ ] **Separation of Concerns (Auxiliary vs Core) section checked** — confirm no dev-only tooling is bundled into main binary
+- [ ] **D8 Architecture checked**: dead code, god files, architecture violations, circular dependencies
