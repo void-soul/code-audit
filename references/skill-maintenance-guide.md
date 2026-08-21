@@ -1,14 +1,14 @@
 # How to Update This Skill Without Breaking Sequential Execution
 
 This skill uses a **thin SKILL.md + references/** pattern to force the agent
-through 7 audit dimensions without skipping. If you edit this skill, preserve
+through 8 audit dimensions without skipping. If you edit this skill, preserve
 that structure.
 
 ## Architecture (WHY)
 
 The problem: agents read a monolithic document once, produce "I know this"
-illusion, and skim or skip later sections. For a 7-dimension audit, D1 gets
-thorough coverage while D6/D7 are gone in 30 seconds.
+illusion, and skim or skip later sections. For an 8-dimension audit, D1 gets
+thorough coverage while the later dimensions are gone in 30 seconds.
 
 The solution:
 
@@ -22,7 +22,8 @@ code-audit/
     ├── d4-data.md
     ├── d5-api.md
     ├── d6-engineering.md
-    └── d7-defensive.md
+    ├── d7-defensive.md
+    └── d8-architecture.md
 ```
 
 SKILL.md contains ZERO checklist items. The agent MUST load each reference
@@ -33,7 +34,7 @@ file to know what to check. This is enforced, not suggested.
 | Mechanism | What it prevents |
 |-----------|-----------------|
 | Checklists ONLY in reference files | Agent can't audit without loading — breaks "I already know it" illusion |
-| Todo list (7 items) with sequential completion | Agent must actively check off dimensions; todo state makes skips visible |
+| Todo list (8 items) with sequential completion | Agent must actively check off dimensions; todo state makes skips visible |
 | Dimension-by-dimension summary table in output | A missing row = visible evidence of skip to the user |
 
 ## Editing Rules

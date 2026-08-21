@@ -1,31 +1,31 @@
 # D8 — Architecture & Code Quality Audit Checklist
 
-检查死代码、上帝文件、架构违规。这些是"能编译通过但应该重构"的问题。
+Checks for dead code, god files, and architecture violations — problems that "compile fine but should be refactored."
 
-## 死代码（Dead Code）
+## Dead Code
 
-### 什么是死代码
-- **未使用的函数/方法**：定义了但从未被调用
-- **未使用的变量/常量**：声明后从未读取
-- **未使用的导入**：import了但没用到
-- **永远为False的条件分支**：if (false) { ... }
-- **已废弃的API端点**：路由存在但无调用方
-- **注释掉的代码块**：长时间未被恢复的注释代码
+### What is dead code
+- **Unused functions/methods**: defined but never called
+- **Unused variables/constants**: declared but never read
+- **Unused imports**: imported but not used
+- **Branches that are always false**: `if (false) { ... }`
+- **Deprecated API endpoints**: route exists but has no callers
+- **Commented-out code blocks**: commented code not restored for a long time
 
-### 检测方法
+### Detection
 
-**grep检测未使用符号：**
+**grep for unused symbols:**
 ```bash
-# 查找函数定义但无调用
+# Find function definitions with no call sites
 grep -rn "def my_function" src/
 grep -rn "function my_function" src/
 grep -rn "class MyClass" src/
 
-# 统计引用次数（应该 > 1，定义+使用）
+# Count references (should be > 1: definition + usage)
 grep -rn "my_function()" src/ | wc -l
 ```
 
-**AST静态分析（更准确）：**
+**AST static analysis (more accurate):**
 ```bash
 # Python: pyflakes / flake8 --select=F401,F841
 flake8 --select=F401,F841 src/
@@ -33,47 +33,47 @@ flake8 --select=F401,F841 src/
 # TypeScript: tsc --noEmit
 tsc --noEmit
 
-# ESLint规则
+# ESLint rules
 npx eslint --rule 'no-unused-vars: error' src/
 ```
 
-**手动检查信号：**
-- 函数定义后有长时间（> 3个月）无调用
-- 函数体为空或只有 `pass` / `return`
-- 条件判断 `if (false)` 或 `if (never_true)`
-- 被注释掉且与相邻代码重复的代码块
+**Manual signal checks:**
+- Function with no call sites for a long time (> 3 months)
+- Empty function bodies or only `pass` / `return`
+- Conditions like `if (false)` or `if (never_true)`
+- Commented-out blocks that duplicate adjacent code
 
-### 判定标准
+### Severity guide
 
-| 情况 | Severity | 说明 |
-|------|----------|------|
-| 公共API函数未被调用 | HIGH | 可能是废弃接口，需确认 |
-| 私有函数未被调用 | MEDIUM | 内部死代码，可清理 |
-| 导入未使用 | LOW | 代码卫生问题 |
-| 注释掉的代码块（>10行） | MEDIUM | 死代码残留 |
-| 条件分支永远不执行 | HIGH | 逻辑错误或死代码 |
+| Case | Severity | Notes |
+|------|----------|-------|
+| Public API function not called | HIGH | Possibly deprecated interface, needs confirmation |
+| Private function not called | MEDIUM | Internal dead code, safe to remove |
+| Unused import | LOW | Code hygiene issue |
+| Commented-out code block (> 10 lines) | MEDIUM | Dead-code residue |
+| Branch never executed | HIGH | Logic error or dead code |
 
 ---
 
-## 上帝文件（God File/Class/Module）
+## God File (File/Class/Module)
 
-### 什么是上帝文件
-- 文件行数过多（通常 > 500行）
-- 承担过多职责（违反单一职责原则）
-- 依赖过多其他模块
-- 包含多种不相关的业务逻辑
+### What is a god file
+- Excessive line count (usually > 500 lines)
+- Too many responsibilities (violates the Single Responsibility Principle)
+- Depends on too many other modules
+- Contains multiple unrelated business logic paths
 
-### 检测方法
+### Detection
 
-**行数检测：**
+**Line count:**
 ```bash
-# 统计项目文件行数
+# Count lines across project files
 find src/ -name "*.py" -exec wc -l {} + | sort -rn | head -20
 find src/ -name "*.ts" -exec wc -l {} + | sort -rn | head -20
 find src/ -name "*.js" -exec wc -l {} + | sort -rn | head -20
 ```
 
-**复杂度检测：**
+**Complexity:**
 ```bash
 # Python: radon
 radon cc src/ -s | sort -rn | head -20
@@ -82,36 +82,36 @@ radon cc src/ -s | sort -rn | head -20
 npx eslint --rule 'complexity: [error, 10]' src/
 ```
 
-**依赖分析：**
+**Dependency analysis:**
 ```bash
-# Python: 统计import数量
+# Python: count imports
 grep -c "^import\|^from" file.py
 
-# TypeScript: 统计import数量
+# TypeScript: count imports
 grep -c "^import" file.ts
 ```
 
-### 判定标准
+### Severity guide
 
-| 指标 | CRITICAL | HIGH | MEDIUM |
-|------|----------|------|--------|
-| 文件行数 | > 1000行 | 500-1000行 | 300-500行 |
-| 圈复杂度 | > 50 | 20-50 | 10-20 |
-| Import数量 | > 30 | 15-30 | 10-15 |
-| 功能模块数 | > 5个无关模块 | 3-5个 | 2-3个 |
+| Metric | CRITICAL | HIGH | MEDIUM |
+|--------|----------|------|--------|
+| File line count | > 1000 | 500-1000 | 300-500 |
+| Cyclomatic complexity | > 50 | 20-50 | 10-20 |
+| Import count | > 30 | 15-30 | 10-15 |
+| Unrelated modules | > 5 | 3-5 | 2-3 |
 
-**God Class/Module判定：**
-- 一个类承担了3种以上不相关的职责
-- 一个模块导入了项目50%以上的其他模块
-- 一个文件包含多个不相关的功能函数
+**God Class/Module judgment:**
+- A class takes on more than 3 unrelated responsibilities
+- A module imports more than 50% of the other modules
+- A file contains multiple unrelated functional functions
 
 ---
 
-## 架构违规（Architecture Violations）
+## Architecture Violations
 
-### 检查层次结构
+### Check layering
 
-**典型分层架构：**
+**Typical layered architecture:**
 ```
 ┌─────────────────┐
 │   Presentation  │  (UI, Controllers, Views)
@@ -124,99 +124,99 @@ grep -c "^import" file.ts
 └─────────────────┘
 ```
 
-**违规模式：**
-- Presentation层直接访问Infrastructure层
-- Domain层依赖Application层
-- Infrastructure层依赖Presentation层
-- 跨层调用绕过中间层
+**Violation patterns:**
+- Presentation directly accesses Infrastructure
+- Domain depends on Application
+- Infrastructure depends on Presentation
+- Cross-layer calls bypass the middle layer
 
-### 检测方法
+### Detection
 
-**依赖图分析：**
+**Dependency graph analysis:**
 ```bash
-# Python: 使用 pydeps
+# Python: pydeps
 pydeps src/ --max-bacon=2 --cluster
 
-# TypeScript: 使用 madge
+# TypeScript: madge
 npx madge --circular src/
 npx madge --image graph.svg src/
 ```
 
-**导入方向检查：**
+**Import direction check:**
 ```bash
-# 检查是否违反依赖规则
-# 例如：domain层不应import application层
+# Check for dependency-rule violations
+# e.g., the domain layer must not import the application layer
 grep -rn "from.*application" src/domain/
 grep -rn "from.*presentation" src/domain/
 grep -rn "from.*presentation" src/infrastructure/
 ```
 
-**循环依赖检测：**
+**Circular dependency detection:**
 ```bash
 # Node.js
 npx madge --cycles src/
 
 # Python
-python -m pyclbr -q src/  # 或使用 pydeps
+python -m pyclbr -q src/  # or use pydeps
 ```
 
-### 判定标准
+### Severity guide
 
-| 违规类型 | Severity | 示例 |
-|---------|----------|------|
-| Presentation → Infrastructure | HIGH | Controller直接访问数据库 |
-| Domain → Application | CRITICAL | 领域模型依赖应用服务 |
-| Infrastructure → Presentation | HIGH | 基础设施依赖UI组件 |
-| 循环依赖 | HIGH | A依赖B，B依赖A |
-| 跨层调用 | MEDIUM | 跳过中间层直接调用 |
-| 紧耦合模块 | MEDIUM | 模块间导入过多 |
+| Violation | Severity | Example |
+|-----------|----------|---------|
+| Presentation → Infrastructure | HIGH | Controller directly accesses the database |
+| Domain → Application | CRITICAL | Domain model depends on an application service |
+| Infrastructure → Presentation | HIGH | Infrastructure depends on UI components |
+| Circular dependency | HIGH | A depends on B, B depends on A |
+| Cross-layer call | MEDIUM | Bypasses the middle layer |
+| Tightly coupled modules | MEDIUM | Too many imports between modules |
 
 ---
 
-## 代码重复（Duplication）
+## Duplication
 
-### 检测方法
+### Detection
 
-**文本相似度：**
+**Text similarity:**
 ```bash
-# 使用 similarity检测工具
+# Use a similarity-detection tool
 pip install similard
 similard src/
 
-# 或使用 dupfinder
+# Or use dupfinder
 dupfinder src/
 ```
 
-**人工检查信号：**
-- 相似函数体出现在不同文件中
-- 相同的错误处理模式复制多次
-- 相似的验证逻辑散落各处
+**Manual signal checks:**
+- Similar function bodies in different files
+- The same error-handling pattern copied multiple times
+- Similar validation logic scattered across the codebase
 
-### 判定标准
+### Severity guide
 
-| 重复度 | Severity |
-|--------|----------|
-| 3处以上相同代码块 | HIGH |
-| 2处高度相似（>80%） | MEDIUM |
-| 轻微相似（60-80%） | LOW |
+| Duplication | Severity |
+|-------------|----------|
+| Same code block in 3+ places | HIGH |
+| Two highly similar blocks (> 80%) | MEDIUM |
+| Mildly similar (60-80%) | LOW |
 
 ---
 
-## 完成标准
+## Completion criterion
 
-- 无行数 > 500 的文件（除非有明确理由）
-- 无圈复杂度 > 20 的函数
-- 无跨层违规调用
-- 无循环依赖
-- 死代码比例 < 5%
+- No file over 500 lines (unless there's a clear reason)
+- No function with cyclomatic complexity > 20
+- No cross-layer violations
+- No circular dependencies
+- Dead code ratio < 5%
 
-## 如何报告
+## How to Report
 
-记录：`file:line → issue → fix | severity: critical/high/medium/low | effort: small/medium/large`
+Record: `file:line → issue → fix | severity: critical/high/medium/low | effort: small/medium/large`
 
 **Severity guide for D8:**
-- 上帝文件（>1000行）→ CRITICAL
-- 架构违规（跨层调用、循环依赖）→ HIGH
-- 死代码（公共API未调用）→ MEDIUM
-- 代码重复（>3处）→ MEDIUM
-- 代码卫生（导入未使用、小注释块）→ LOW
+- God file (> 1000 lines) → CRITICAL
+- Architecture violation (cross-layer call, circular dependency) → HIGH
+- Dead code (public API not called) → MEDIUM
+- Duplication (> 3 places) → MEDIUM
+- Code hygiene (unused import, small commented block) → LOW

@@ -33,4 +33,4 @@ Record: `file:line → issue → fix | severity: critical/high/medium/low | effo
 - Breaking API change silently deployed, batch API with no limit exposing all data → CRITICAL
 - Missing backend validation, enum addition breaking strict consumer → HIGH
 - Missing API version strategy, undocumented error schema → MEDIUM
-| Deprecated endpoints still live | LOW
+- Deprecated endpoints still live | LOW

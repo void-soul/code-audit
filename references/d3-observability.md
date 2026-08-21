@@ -23,7 +23,7 @@
 - [ ] Overly broad `catch Exception` / `catch (e)` that masks real bugs instead of letting them crash-loops (which is safer)
 - [ ] Error messages that leak internal details — stack frames, SQL snippets, file paths, library versions
 - [ ] Missing fallback for non-critical dependency failures — if recommendations service errors, page should still render core content
-- [ ] Fail-open vs fail-closed混淆 — payment gateway timeout: did we assume success (double charge) or failure (lost revenue)?
+- [ ] Fail-open vs fail-closed confusion — payment gateway timeout: did we assume success (double charge) or failure (lost revenue)?
 - [ ] Error code/message inconsistencies — same error returns different codes across endpoints
 
 ## Completion Criterion

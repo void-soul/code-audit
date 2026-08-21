@@ -40,5 +40,5 @@ Record: `file:line → issue → fix | severity: critical/high/medium/low | effo
 **Severity guide for D7:**
 - Money arithmetic with float on financial totals, missing division-by-zero guard on critical computation → CRITICAL
 - Naive timezone comparison on user-facing timestamps, float equality on payment amounts → HIGH
-| Magic numbers on non-critical paths, missing named constants → MEDIUM
-| Unnamed pagination default | LOW
+- Magic numbers on non-critical paths, missing named constants → MEDIUM
+- Unnamed pagination default | LOW
