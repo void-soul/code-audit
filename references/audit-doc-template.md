@@ -1,7 +1,8 @@
 # Audit Document Template
 
-This template is used by `code-audit` to generate the structured fix task list.
-The same document is updated by `code-audit` after fixes are committed, and by `code-re-audit` after verification.
+This template is used by `code-audit` to generate the structured audit document
+with an importance-sorted fix task list. The audit delivers documents + task
+list; fix tracking / re-audit are outside this skill's scope.
 
 ---
 
@@ -13,41 +14,50 @@ The same document is updated by `code-audit` after fixes are committed, and by `
 | **Audited By** | <agent/session identifier> |
 | **Scope** | <files, branches, commit range> |
 | **Commit / Branch** | `<hash or branch name>` |
-| **Status** | AUDITING / REMEDIATING / RE_AUDITING / CLOSED |
+| **Status** | AUDITING / CLOSED |
 
-*Status transitions:*
-- `AUDITING` — audit in progress / complete, fixes not started
-- `REMEDIATING` — fixes being applied
-- `RE_AUDITING` — re-audit in progress
-- `CLOSED` — all tasks resolved or accepted
+---
+
+## 定位与范围（Phase 0 结论）
+
+| Field | Value |
+|-------|-------|
+| **项目定位** | 在线 / 本地 / 混合（逐子项目标注） |
+| **标注项过滤** | 定位=在线 → 查【在线】跳【本地】；定位=本地 → 查【本地】跳【在线】 |
+| **审计范围** | <目录/子项目清单> |
+| **排除目录** | <目录 + 理由> |
+| **架构原则** | <用户确认的原则，或"默认分层原则（已确认）"> |
+
+> 分层文档（OVERVIEW.md / STRUCTURE.md / SUBPROJECT-*.md）位于本文档所在目录。
 
 ---
 
 ## Executive Summary
 
-| Severity | Total | TODO | DONE | VERIFIED | WONTFIX | REOPENED |
-|----------|-------|------|------|----------|---------|----------|
-| CRITICAL | 0 | 0 | 0 | 0 | 0 | 0 |
-| HIGH | 0 | 0 | 0 | 0 | 0 | 0 |
-| MEDIUM | 0 | 0 | 0 | 0 | 0 | 0 |
-| LOW | 0 | 0 | 0 | 0 | 0 | 0 |
-| **Total** | **0** | **0** | **0** | **0** | **0** | **0** |
+| Severity | Total |
+|----------|-------|
+| CRITICAL | 0 |
+| HIGH | 0 |
+| MEDIUM | 0 |
+| LOW | 0 |
+| **Total** | **0** |
 
 ---
 
 ## Fix Task List
 
+<!-- 按重要性排序：CRITICAL → HIGH → MEDIUM → LOW；同级内按影响面（波及子项目/用户数/发生频率）排序 -->
 <!-- Repeat this block for each finding/task -->
 
 ### AUDIT-YYYYMMDD-001: <title>
 
-|| Field | Value |
-||-------|-------|
-|| **ID** | AUDIT-YYYYMMDD-001 |
-|| **Dimension** | D1 – Security / D2 – Concurrency / D3 – Observability / D4 – Data / D5 – API / D6 – Engineering / D7 – Defensive / D8 – Architecture |
-|| **Severity** | CRITICAL / HIGH / MEDIUM / LOW |
-|| **Status** | TODO / IN_PROGRESS / DONE / VERIFIED / WONTFIX / REOPENED |
-|| **Location** | `path/to/file.ext:line` |
+| Field | Value |
+|-------|-------|
+| **ID** | AUDIT-YYYYMMDD-001 |
+| **Dimension** | D1 – Security / D2 – Concurrency & Resources / D3 – Observability / D4 – Data & Storage / D5 – API Contracts / D6 – Engineering / D7 – Defensive / D8 – Architecture |
+| **Severity** | CRITICAL / HIGH / MEDIUM / LOW |
+| **Status** | TODO |
+| **Location** | `path/to/file.ext:line` |
 
 #### Description
 
@@ -56,25 +66,6 @@ The same document is updated by `code-audit` after fixes are committed, and by `
 #### Fix Plan
 
 <How to fix it. Be specific: what code to write, what config to change, what to verify after.>
-
-#### Fix Result (filled when status → DONE)
-
-| Field | Value |
-|-------|-------|
-| **Fixed By** | <agent/session identifier> |
-| **Commit / PR** | `<hash or PR link>` |
-| **Fix Date** | YYYY-MM-DD |
-| **What Changed** | <brief description of the fix> |
-| **Files Modified** | `path/a.py`, `path/b.ts` |
-
-#### Verification (filled when status → VERIFIED)
-
-| Field | Value |
-|-------|-------|
-| **Verified By** | <agent/session identifier> |
-| **Verify Date** | YYYY-MM-DD |
-| **Method** | <how the fix was verified — test, manual review, grep, etc.> |
-| **Evidence** | <test name, command output, commit link, etc.> |
 
 ---
 
@@ -85,7 +76,7 @@ The same document is updated by `code-audit` after fixes are committed, and by `
 | **ID** | AUDIT-YYYYMMDD-002 |
 | **Dimension** | ... |
 | **Severity** | ... |
-| **Status** | ... |
+| **Status** | TODO |
 | **Location** | ... |
 
 #### Description
@@ -94,60 +85,12 @@ The same document is updated by `code-audit` after fixes are committed, and by `
 #### Fix Plan
 ...
 
-#### Fix Result
-...
-
-#### Verification
-...
-
 ---
 
 <!-- Continue for each finding -->
 
 ---
 
-## Remediation Log
+## Summary
 
-<Chronological log of all changes. Updated each time a task transitions status.>
-
-| Timestamp | Task ID | Action | Details |
-|-----------|---------|--------|---------|
-| YYYY-MM-DD HH:MM | AUDIT-YYYYMMDD-001 | STATUS_CHANGE | TODO → IN_PROGRESS — started fix |
-| YYYY-MM-DD HH:MM | AUDIT-YYYYMMDD-001 | STATUS_CHANGE | IN_PROGRESS → DONE — commit `<hash>` — <brief description> |
-| YYYY-MM-DD HH:MM | AUDIT-YYYYMMDD-001 | STATUS_CHANGE | DONE → VERIFIED — re-audit confirms fix correct |
-| | | | |
-
----
-
-## Re-Audit Trail
-
-<Each re-audit cycle is recorded here.>
-
-### Re-Audit #1 — YYYY-MM-DD
-
-| Field | Value |
-|-------|-------|
-| **Audited By** | <agent/session identifier> |
-| **Scope** | Tasks: AUDIT-YYYYMMDD-001, AUDIT-YYYYMMDD-002 (status=DONE) |
-| **Input Document** | `docs/audit/AUDIT-YYYYMMDD-<scope>.md` (version: <commit hash>) |
-
-**Result:**
-- AUDIT-YYYYMMDD-001: VERIFIED — <evidence>
-- AUDIT-YYYYMMDD-002: REOPENED — <reason: fix incomplete / regression / ...>
-- New tasks introduced by fix: <IDs if any>
-
----
-
-<!-- Continue for each re-audit cycle -->
-
----
-
-## Final Sign-Off
-
-| Field | Value |
-|-------|-------|
-| **Audit Closed** | YES / NO |
-| **Closed By** | <agent/session identifier> |
-| **Closed Date** | YYYY-MM-DD |
-| **Remaining Tasks** | <list of WONTFIX + reason, or "none"> |
-| **Acceptance Signature** | <usually the user approves> |
+<Findings by severity; highest-risk themes; recommended fix order.>

@@ -1,27 +1,49 @@
 # Code Audit — Beyond Correctness
 
-A comprehensive code audit framework: **8 dimensions**, processed **one at a time**. Produces a structured audit document with a fix task list. Supports completing tasks and updating the document with fix results. Designed for independent re-audit.
+A positioning-aware code audit framework: interactive scope confirmation →
+layered architecture analysis → file-level deep audit (**8 core dimensions,
+items tagged 【通用】/【在线】/【本地】 and filtered by positioning**, processed one
+dimension at a time) → layered analysis documents → importance-sorted fix task list.
 
-**Core principle:** Each dimension catches failure modes the others miss. Skip one at your peril. Batch them and you'll skip half-heartedly.
+**Core principle:** 先确认定位与范围，再逐层深入。Each dimension catches failure
+modes the others miss. Skip one at your peril. Batch them and you'll skip half-heartedly.
 
-## Dimensions
+## Workflow
 
-| Dim | Name | Focus |
-|-----|------|-------|
-| D1 | Security | Injection, auth, data exposure, input validation, dependencies |
-| D2 | Concurrency | Race conditions, locks, thread safety, async pitfalls |
-| D3 | Observability | Logging, metrics, tracing, error reporting, alerting |
-| D4 | Data & Storage | Schema, queries, caching, migration, consistency |
-| D5 | API Contracts | Request/response validation, versioning, error handling |
-| D6 | Engineering Practice | Testing, config, CI/CD, docs, build reproducibility |
-| D7 | Defensive Details | Magic numbers, timezones, numeric precision, recursion depth |
-| D8 | Architecture & Code Quality | Dead code, god files/classes, architecture violations, duplication |
+```
+Phase 0  定位与范围确认     → 项目定位（在线/本地）用户确认 + 排除目录 + 架构原则   [交互式]
+Phase 1  分层架构分析       → 各子项目定位 → 各模块定位                            → 结构文档
+Phase 2  逐文件深入审计     → D1–D8 逐维度顺序执行；检查项标【通用】/【在线】/【本地】，按定位过滤
+Phase 3  文档生成           → 综述 / 结构 / 子项目 / 模块分析文档
+Phase 4  审计总文档         → 按重要性排序的整改任务清单
+```
+
+**进度保护**：全程记录到 `docs/audit/<dir>/PROGRESS.md`（开工即建、随做随记、先查再动）。
+上下文被压缩或会话中断后从 PROGRESS.md 恢复现场，已完成的任务不重复执行。
+协议见 `references/progress-log.md`。
+
+## Audit Passes
+
+| Pass | Name | Focus |
+|------|------|-------|
+| D1 | Security | Injection, auth/越权, secrets, data exposure, input validation, dependencies |
+| D2 | Concurrency & Resources | Race conditions, locks, resource/memory leaks【本地】, UI 阻塞【本地】 |
+| D3 | Observability | Logging, metrics, error handling, 静默失败 |
+| D4 | Data & Storage | Queries, transactions, caching, Service Performance【在线】 |
+| D5 | API Contracts | Contract integrity, input hardening |
+| D6 | Engineering Practice | Testing, config, consistency（前后矛盾/注释不符）, docs |
+| D7 | Defensive Details | Magic numbers, timezones, numeric precision, 不合理逻辑, 崩溃/未处理异常【本地】 |
+| D8 | Architecture & Code Quality | Dead code, 孤岛, god files (≥1000 lines), architecture violations, 可复用/提取 |
+
+每个检查项标注【通用】/【在线】/【本地】：【通用】必查；【在线】/【本地】项按 Phase 0
+确认的定位过滤（混合项目逐子项目），被跳过的项在报告中明确标 N/A。
+原通用重点（孤岛/可复用/矛盾/上帝文件等）已并入 D6/D7/D8，
+在线数据安全与性能并入 D1/D4，本地内存泄露与崩溃并入 D2/D3/D7。
 
 ## When to Use
 
 - User asks for "audit", "全面审查", "代码审计", "review" beyond the obvious
 - After a large feature lands, before a release cut, during a hardening sprint
-- When `simplify-code` / `requesting-code-review` already ran, deeper pass needed
 - Onboarding to an unfamiliar codebase and you need its risk profile
 
 **Skip for:** Quick bug-fix PRs, typo fixes, user explicitly scopes narrow.
@@ -29,203 +51,50 @@ A comprehensive code audit framework: **8 dimensions**, processed **one at a tim
 **This skill vs peers:**
 - `simplify-code` = post-implementation cleanup (dead code, duplication, efficiency)
 - `requesting-code-review` = pre-commit gate (security + tests + independent reviewer)
-- **This skill** = deep multi-dimensional audit with fix task list + remediation tracking
+- **This skill** = deep multi-dimensional audit with layered docs + importance-sorted fix task list
 
 ---
 
-## Execution Protocol (MANDATORY — DO NOT BATCH)
+## Documents Produced
 
-**⚠️ CRITICAL: Must scan the ENTIRE codebase, not just recent commits!**
+Written to `docs/audit/AUDIT-<YYYYMMDD>-<scope>/`:
 
-Audit scope must be the whole codebase, not the latest commit or diff.
+- `OVERVIEW.md` — 项目综述文档（定位、技术栈、子项目清单、架构、关键数据流）
+- `STRUCTURE.md` — 结构文档（目录树、审计范围/排除标注、模块清单）
+- `SUBPROJECT-<name>.md` — 各子项目分析文档（含模块定位）
+- `AUDIT-<YYYYMMDD>-<scope>.md` — 审计总文档：定位与范围（Phase 0 结论）+
+  按重要性排序的修复任务清单（CRITICAL → HIGH → MEDIUM → LOW，同级按影响面）
 
-This skill has **8 dimensions**. They live in `references/` files — NOT in this document.
-
-You MUST process them **sequentially**. Do not attempt to audit all 8 in a single pass.
-
-At audit start, create a todo list with all 8 dimensions (D1–D8). Then for each:
-
-1. **Announce** — output `### Auditing D<N>: <name>`
-2. **Load** — read `references/d<N>-<slug>.md` with your file-reading tool to get the checklist
-3. **Audit** — search the **entire codebase** against each item in that file (not just recent commits)
-4. **Report** — output findings for this dimension (use the template below)
-5. **Complete** — mark this dimension done in your todo list before moving to the next
-
-**If you skip loading the reference file, you will miss checklist items. Do not write findings from memory.**
-
----
-
-## Output Format
-
-```
-📋 CODE AUDIT REPORT — <scope>
-
-CRITICAL (must fix before merge)
-─────────────────────────────────
-[D<N>] file:line — issue → fix
-...
-
-HIGH (fix this sprint)
-─────────────────────
-...
-
-MEDIUM (backlog, but tracked)
-─────────────────────────────
-...
-
-LOW (nice-to-have)
-──────────────────
-...
-
-DIMENSION SUMMARY
-─────────────────
-D1 Security:        {N} issues | {brief note or "clean"}
-D2 Concurrency:     {N} issues | {brief note or "clean"}
-D3 Observability:   {N} issues | {brief note or "clean"}
-D4 Data & Storage:  {N} issues | {brief note or "clean"}
-D5 API Contracts:   {N} issues | {brief note or "clean"}
-D6 Engineering:     {N} issues | {brief note or "clean"}
-D7 Defensive:       {N} issues | {brief note or "clean"}
-D8 Architecture:    {N} issues | {brief note or "clean"}
-
-RECOMMENDED NEXT ACTIONS
-────────────────────────
-1. [highest severity item]
-2. ...
-```
-
-**Never output "looks good" without the dimension-by-dimension breakdown.**
-
----
-
-## Phase 2 — Generate Audit Document with Fix Task List (MANDATORY)
-
-After all 8 dimensions are audited, you MUST generate an audit document.
-This document is a structured fix task list + the bridge to re-audit.
-
-### Step 1 — Collect findings
-
-For each finding, assign:
-- **Unique ID**: `AUDIT-<YYYYMMDD>-<3-digit-number>` (e.g., `AUDIT-20260101-001`)
-- **Status**: `TODO` (default), `IN_PROGRESS`, `DONE`, `VERIFIED`, `WONTFIX`
-- **Fix Task**: a concrete, actionable remediation plan
-
-### Step 2 — Use the template
-
-Load the template at `references/audit-doc-template.md` to write the document.
-
-### Step 3 — Write the document
-
-```
-docs/audit/AUDIT-<YYYYMMDD>-<commit-hash-or-branch>.md
-```
-
-If `docs/audit/` does not exist, create it.
-
-### Step 4 — Confirm path in your final response.
-
----
-
-## Phase 3 — Complete Fix Tasks & Update Document (Post-Audit)
-
-After generating the audit document, present it to the user and ask:
-
-1. Which items should we fix now? (fix all CRITICAL + HIGH? specific IDs?)
-2. Should we proceed with fixes, or is this a dry-run audit only?
-
-**If the user asks you to fix:**
-- Create a fix todo list from the audit document's task list
-- Fix items one at a time or in batches by severity (CRITICAL first)
-- After each fix:
-  1. Show the diff to the user
-  2. **Wait for the user to commit manually** (NEVER auto-commit)
-  3. After the user commits, update the audit document:
-     - Change task status: `TODO` → `DONE`
-     - Add the commit hash or PR link
-     - Add a brief description of what was changed and why
-     - Update the Remediation Log
-
-**After all fixes committed by the user**, the document becomes the input for re-audit.
-
----
-
-## Audit Document Structure
-
-See `references/audit-doc-template.md` for the full template.
-
-The document MUST contain:
-- **Scope**: what was audited (files, branches, commit range)
-- **Fix Task List**: each finding as a task with ID, dimension, location, description, severity, fix plan, status
-- **Remediation Log**: chronological log of status changes (timestamp, commit/PR, fix description)
-- **Summary**: total findings by severity, fixed count, remaining count
-- **Re-Audit Trail**: records of each re-audit cycle (for re-audit agent to append)
-
----
-
-## Task Status Lifecycle
-
-```
-                           User commits
-                              │
-───→ TODO ──fix──→ IN_PROGRESS ──code change──→ DONE ──verify──→ VERIFIED
-  │                    │                        │                   ↑
-  │                    │                        └───regression──→ REOPENED
-  │                    │                                            │
-  │                    └────────────────────────────────────────────┘
-  │                                              (re-fix cycle)
-  │
-  └─────────────────────────────────────────────────────────→ WONTFIX
-                                                              (risk accepted)
-```
-
-| Status | Meaning |
-|--------|---------|
-| `TODO` | Not yet started |
-| `IN_PROGRESS` | Fix being designed/implemented |
-| `DONE` | Code change committed by user, awaiting re-audit |
-| `VERIFIED` | Re-audit agent confirmed fix is correct |
-| `REOPENED` | Re-audit found fix incomplete or incorrect |
-| `WONTFIX` | Risk accepted, no fix planned |
-
----
-
-## D8 — Architecture & Code Quality
-
-Audits **dead code, god files, architecture violations, and code duplication** — problems that "compile fine but should be refactored."
-
-> **Full checklist:** the complete D8 audit checklist with per-item grep commands and severity guidance lives in `references/d8-architecture.md`.
+Each task has a unique ID (`AUDIT-<YYYYMMDD>-<NNN>`), dimension, severity,
+location, description, and a concrete fix plan. Fix tracking / re-audit are
+out of this skill's scope — the task list is the deliverable.
 
 ---
 
 ## Common Pitfalls
 
-1. **Treating "it works" as "it's correct."** Audit the negative space — what *can* go wrong — not just the happy path.
-2. **Reporting without evidence.** Every finding needs `file:line` + concrete trigger scenario.
-3. **Equal-weight reporting.** A hardcoded JWT secret ≠ a missing docstring. Always sort by severity.
-4. **Skipping dimensions because they're hard.** D1 Security and D2 Concurrency are the ones people most want to skip. Also the ones that cause worst production incidents.
-5. **Not generating the audit document.** Without this document, fix tracking and re-audit are impossible.
-6. **Updating code without updating the document.** The document is the single source of truth.
-7. **Auto-committing.** Let the user decide when to commit. Update the document only after user commits.
-8. **Mixing auxiliary tooling into core.** Dev-only scripts (doc updaters, scan tools, report generators) bundled inside the main binary rather than living as standalone scripts in `scripts/` — keeps the core lean and the build graph simple. Extract them out.
-9. **UI surface for non-core workflows.** Features that a normal user would never trigger from the main screen don't need a tab in the UI — give them their own CLI entry point or static site.
+1. **跳过 Phase 0 就开始审计。** 定位决定【在线】/【本地】标注项查不查，排除目录决定审计边界，架构原则决定 D8 判定基准。
+2. **Treating "it works" as "it's correct."** Audit the negative space — what *can* go wrong — not just the happy path.
+3. **Reporting without evidence.** Every finding needs `file:line` + concrete trigger scenario.
+4. **Equal-weight reporting.** A hardcoded JWT secret ≠ a missing docstring. Always sort by severity.
+5. **Skipping dimensions because they're hard.** D1/D2/D7 are the ones people most want to skip. Also the ones that cause worst incidents.
+6. **无视类型标注。** 定位为本地却去报 CORS/越权、定位为在线却跳过内存泄露——【在线】/【本地】标注项必须按定位过滤，不符的明确标 N/A。
+7. **Not generating the layered documents.** 没有综述/结构/子项目文档，整改清单就失去上下文。
+8. **Mixing auxiliary tooling into core.** Dev-only scripts bundled inside the main binary rather than as standalone scripts in `scripts/` — extract them out.
 
 ---
 
 ## Verification Checklist
 
-- [ ] **Audit Scope is ENTIRE CODEBASE** — not limited to recent commits or diff
-- [ ] Todo list created with all 8 dimensions at audit start
-- [ ] Each dimension's reference file loaded BEFORE auditing that dimension
-- [ ] Every dimension has explicit findings or "no issues — searched for X, Y, Z"
+- [ ] **Phase 0 完成且用户已确认**：项目定位（在线/本地/混合）、排除目录、架构原则
+- [ ] **Audit Scope = Phase 0 确认的范围** — not limited to recent commits or diff
+- [ ] Todo list created with D1–D8 at audit start
+- [ ] Each pass's reference file loaded BEFORE auditing that pass
+- [ ] Every pass has explicit findings or "no issues — searched for X, Y, Z"
 - [ ] Every finding has: file:line, issue, fix suggestion, severity
 - [ ] Report grouped by CRITICAL → HIGH → MEDIUM → LOW
-- [ ] Dimension Summary table filled (not omitted)
-- [ ] Dependencies scanned for CVEs (D1 reference)
-- [ ] Money/arithmetic checked for safe numeric types (D7 reference)
-- [ ] Auth checks verified on user-scoped endpoints (D1 reference)
-- [ ] Audit document generated at `docs/audit/AUDIT-<date>-<scope>.md`
-- [ ] Every task in the document has a unique ID and status
-- [ ] User asked about fix scope before proceeding with remediation
-- [ ] After user commits, document updated with commit hash + fix description
-- [ ] **Separation of Concerns (Auxiliary vs Core) section checked** — confirm no dev-only tooling is bundled into main binary
-- [ ] **D8 Architecture checked**: dead code, god files, architecture violations, circular dependencies
+- [ ] Dimension Summary table filled（定位不符的标注项计 N/A）
+- [ ] **分层文档已生成**：OVERVIEW / STRUCTURE / SUBPROJECT-*
+- [ ] 定位=在线：【在线】标注项已查（数据安全/越权/注入/密钥、N+1/无分页/无超时）
+- [ ] 定位=本地：【本地】标注项已查（内存泄露/事件退订/Dispose、闪退/未处理异常、UI 阻塞）
+- [ ] Audit document generated，任务按重要性排序，每项有唯一 ID 与 status
