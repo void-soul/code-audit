@@ -1,7 +1,7 @@
 ---
 name: code-audit
-description: "Use when auditing or reviewing code beyond correctness — positioning-aware (online vs local), layered analysis (project → subproject → module → file), with 8 core dimensions whose checklist items are tagged 【通用】/【在线】/【本地】 and filtered by the confirmed positioning (online: data security & performance; local: memory leaks, crashes, unhandled exceptions, performance); conditional checks for database schema rationality/dead tables & columns/code-schema drift and for multi-end business-logic consistency. Produces overview/structure/per-subproject/per-module analysis docs plus an importance-sorted fix task list. Progress is checkpointed to PROGRESS.md so interrupted/compacted sessions resume without redoing completed work."
-version: 6.1.0
+description: "Use when auditing or reviewing code beyond correctness — positioning-aware (online vs local), layered analysis (project → subproject → module → file), with 8 core dimensions whose checklist items are tagged 【通用】/【在线】/【本地】 and filtered by the confirmed positioning (online: data security & performance; local: memory leaks, crashes, unhandled exceptions, performance); conditional checks for database schema rationality/dead tables & columns/code-schema drift, for multi-end business-logic consistency, and for user-facing UI copy that leaks internal implementation/judgment logic or reads as AI self-narration. Produces overview/structure/per-subproject/per-module analysis docs plus an importance-sorted fix task list. Progress is checkpointed to PROGRESS.md so interrupted/compacted sessions resume without redoing completed work."
+version: 6.2.0
 author: Hermes Agent
 license: MIT
 platforms: [linux, macos, windows]
@@ -69,7 +69,7 @@ Phase 4  审计总文档         → 按重要性排序的整改任务清单
 
 1. **Load** `references/p0-scope.md`
 2. 整体梳理项目 → 提出定位建议（在线 / 本地 / 混合，逐子项目标注）→ **让用户确认**
-3. **确认附加事实**：有无数据库（类型 + schema 真源位置）、有哪些端（服务端/Web/桌面/移动/CLI…）→ 决定 D4 数据库三节与 D5 多端一致性节是否执行
+3. **确认附加事实**：有无数据库（类型 + schema 真源位置）、有哪些端（服务端/Web/桌面/移动/CLI…）、有无用户可见文本（UI/CLI/通知/弹窗）→ 决定 D4 数据库三节、D5 多端一致性节、D6 UI 文案节是否执行
 4. 整理出不需要审计的目录（第三方、构建产物、生成代码等）→ **询问用户是否需要补充**
 5. **询问用户整体架构原则**（作为后续 D8 的判定基准；用户未给出时列出默认原则并请确认）
 6. 产出（定位结论 + 审计范围 + 架构原则 + 数据库/端事实）写入审计文档头部，后续所有判断以此为准
@@ -81,7 +81,7 @@ Phase 4  审计总文档         → 按重要性排序的整改任务清单
 2. **子项目定位**：逐个分析各子项目在架构中的定位（职责/角色/依赖方向/对外接口/风险初判）
 3. **模块定位**：在各子项目内部划分模块，分析各模块在项目中的定位
 4. 按 Phase 2 深入前先生成结构文档草稿（Phase 3 定稿）
-5. **采集事实清单**（Phase 0 确认"有数据库 / 多端"时）：表/列清单 → `SCHEMA.md`；端矩阵与业务规则对照 → `ENDS.md`（清单未建完，不要开始 D4/D5 对应检查）
+5. **采集事实清单**（Phase 0 确认"有数据库 / 多端 / 有用户可见文本"时）：表/列清单 → `SCHEMA.md`；端矩阵与业务规则对照 → `ENDS.md`；用户可见文案清单 → `COPY.md`（清单未建完，不要开始对应维度检查）
 6. **每完成一个子项目/模块定位，立即记入 `PROGRESS.md`**（含"已完成/待办"清单）
 
 ### Phase 2 — 逐文件深入审计（MANDATORY — DO NOT BATCH）
@@ -107,7 +107,7 @@ At audit start (after Phase 0), create a todo list: **D1–D8**. Then for each:
 | D3 Observability | `references/d3-observability.md` | 日志/指标/错误处理/静默失败 |
 | D4 Data & Storage | `references/d4-data.md` | 查询/事务/缓存/服务性能/**数据库设计合理性·僵尸表字段·代码-Schema 漂移**（有数据库时） |
 | D5 API Contracts | `references/d5-api.md` | 契约一致性/输入加固/**多端业务逻辑一致性**（多端时） |
-| D6 Engineering | `references/d6-engineering.md` | 测试/配置/一致性（前后矛盾/注释不符） |
+| D6 Engineering | `references/d6-engineering.md` | 测试/配置/一致性（前后矛盾/注释不符）/**UI 文案与用户提示**（有用户可见文本时） |
 | D7 Defensive | `references/d7-defensive.md` | 魔法值/时间/数值/不合理逻辑/崩溃 |
 | D8 Architecture | `references/d8-architecture.md` | 死代码/孤岛/上帝文件/架构违规/重复 |
 
@@ -133,6 +133,7 @@ At audit start (after Phase 0), create a todo list: **D1–D8**. Then for each:
 | 僵尸表 / 僵尸字段 | D4 | 存在数据库 | 同上 |
 | 代码-Schema 漂移（代码用了不存在的表/字段） | D4 | 存在数据库 | 同上 |
 | 多端业务逻辑一致性 | D5 | 存在多端（≥2 端） | 端清单 + 各端 DTO/model 位置 |
+| UI 文案与用户提示 | D6 | 存在用户可见文本 | 用户可见文本清单（`COPY.md`） |
 
 **If you skip loading the reference file, you will miss checklist items. Do not write findings from memory.**
 
@@ -145,6 +146,7 @@ At audit start (after Phase 0), create a todo list: **D1–D8**. Then for each:
 - `SUBPROJECT-<name>.md` — 各子项目分析文档（含模块定位，可内嵌模块分析）
 - `SCHEMA.md` — 表/列清单与双向差集结论（仅"有数据库"时）
 - `ENDS.md` — 端矩阵与业务规则对照（仅"多端"时）
+- `COPY.md` — 用户可见文案清单与三问判定 + 建议文案（仅"有用户可见文本"时）
 - 深层模块内容多时另出 `MODULE-<subproject>-<module>.md`
 
 **每生成一份文档，立即在 `PROGRESS.md` 勾选**（防止上下文丢失后重复生成）。
@@ -231,7 +233,8 @@ The document MUST contain:
 7. **Not generating the layered documents.** 没有综述/结构/子项目文档，整改清单就失去上下文。
 8. **只读代码不读 schema。** 查"代码用了不存在的表/字段"必须先有 schema 真源清单（迁移/DDL/实体），否则只能靠印象猜。
 9. **多端只看一端。** 多端一致性要求逐端比对同一规则（前端/服务端各算一遍是典型漂移源）。
-10. **把不适用的条件节当成"已查无问题"。** 无数据库/单端项目，条件节标 N/A 而非 clean。
+10. **把"文案读起来奇怪"当主观评价。** 必须按 D6 的 A/B/C/D 四类逐条判定，并给出改写后文案，否则无法验证也无法整改。
+11. **把不适用的条件节当成"已查无问题"。** 无数据库/单端/无 UI 项目，条件节标 N/A 而非 clean。
 11. **Mixing auxiliary tooling into core.** Dev-only scripts bundled inside the main binary rather than as standalone scripts in `scripts/` — extract them out.
 12. **最后统一补记进度。** 每完成一个子项目/pass/文档就必须立即更新 `PROGRESS.md`；上下文一旦被压缩，未记录的已完成工作会全部重做。恢复现场时 `DONE` 项一律跳过。
 
@@ -254,7 +257,8 @@ The document MUST contain:
 - [ ] 定位=本地：【本地】标注项已查（内存泄露/事件退订/Dispose、闪退/未处理异常、UI 阻塞）
 - [ ] **有数据库时**：`SCHEMA.md` 已产出，D4 三节已执行——设计合理性、僵尸表/僵尸字段、代码-Schema 漂移（双向差集）
 - [ ] **多端时**：`ENDS.md` 已产出，D5 多端一致性已执行——每条关键规则有"各端实现位置 + 是否一致"结论
-- [ ] **不适用项标 N/A**（无数据库/单端），未当成 clean
+- [ ] **有用户可见文本时**：`COPY.md` 已产出，D6 UI 文案节已执行——逐条"三问"判定，且每条问题都给出了改写后文案
+- [ ] **不适用项标 N/A**（无数据库/单端/无 UI），未当成 clean
 - [ ] Audit document generated at `docs/audit/AUDIT-<date>-<scope>/`，任务按重要性排序
 - [ ] Every task in the document has a unique ID and status
 - [ ] **`PROGRESS.md` 已在开工时创建，且随做随记**（非事后补记）

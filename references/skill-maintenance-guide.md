@@ -42,10 +42,13 @@ positioning (per subproject for mixed projects). Skipped items must be
 reported as N/A, never silently dropped. Do NOT split type-specific items
 back into separate D9/D10-style files — the tagging IS the mechanism.
 
-**Fact conditions（事实条件）**: sections may also carry 「适用条件：存在数据库 / 存在多端」.
+**Fact conditions（事实条件）**: sections may also carry 「适用条件：存在数据库 / 存在多端 / 存在用户可见文本」.
 When the condition is false the section is reported as N/A (not "clean"), and the
-corresponding inventory doc (`SCHEMA.md` / `ENDS.md`) is skipped. Fact conditions
+corresponding inventory doc (`SCHEMA.md` / `ENDS.md` / `COPY.md`) is skipped. Fact conditions
 are confirmed in Phase 0 (Step 0.1b) and captured in the audit document header.
+
+**Subjective-sounding checks**: 把"感觉不对"的现象写成可判定规则（禁令 + 检测命令 +
+好坏对照示例），并要求输出改写后的文案，否则 Agent 无法验证也无法整改。
 
 ## Three Enforcement Mechanisms
 

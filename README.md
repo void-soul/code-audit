@@ -31,14 +31,14 @@ Phase 4  审计总文档         → 按重要性排序的整改任务清单
 | D3 | Observability | Logging, metrics, error handling, 静默失败 |
 | D4 | Data & Storage | Queries, transactions, caching, Service Performance【在线】, **数据库设计合理性 / 僵尸表僵尸字段 / 代码-Schema 漂移**（有数据库时） |
 | D5 | API Contracts | Contract integrity, input hardening, **多端业务逻辑一致性**（多端时） |
-| D6 | Engineering Practice | Testing, config, consistency（前后矛盾/注释不符）, docs |
+| D6 | Engineering Practice | Testing, config, consistency（前后矛盾/注释不符）, docs, **UI 文案与用户提示**（有用户可见文本时） |
 | D7 | Defensive Details | Magic numbers, timezones, numeric precision, 不合理逻辑, 崩溃/未处理异常【本地】 |
 | D8 | Architecture & Code Quality | Dead code, 孤岛, god files (≥1000 lines), architecture violations, 可复用/提取 |
 
 每个检查项标注【通用】/【在线】/【本地】：【通用】必查；【在线】/【本地】项按 Phase 0
 确认的定位过滤（混合项目逐子项目），被跳过的项在报告中明确标 N/A。
-另有第三类过滤——**事实条件**：标注「适用条件：存在数据库 / 存在多端」的小节，
-条件不成立时整体标 N/A（D4 的数据库三节、D5 的多端一致性节）。
+另有第三类过滤——**事实条件**：标注「适用条件：存在数据库 / 存在多端 / 存在用户可见文本」的小节，
+条件不成立时整体标 N/A（D4 的数据库三节、D5 的多端一致性节、D6 的 UI 文案节）。
 原通用重点（孤岛/可复用/矛盾/上帝文件等）已并入 D6/D7/D8，
 在线数据安全与性能并入 D1/D4，本地内存泄露与崩溃并入 D2/D3/D7。
 
@@ -66,6 +66,7 @@ Written to `docs/audit/AUDIT-<YYYYMMDD>-<scope>/`:
 - `SUBPROJECT-<name>.md` — 各子项目分析文档（含模块定位）
 - `SCHEMA.md` — 表/列清单 + 双向差集结论（僵尸表/字段 vs 代码-Schema 漂移），仅有数据库时
 - `ENDS.md` — 端矩阵 + 关键业务规则各端一致性对照，仅多端时
+- `COPY.md` — 用户可见文案清单 + 三问判定 + 建议改写文案，仅有用户可见文本时
 - `AUDIT-<YYYYMMDD>-<scope>.md` — 审计总文档：定位与范围（Phase 0 结论）+
   按重要性排序的修复任务清单（CRITICAL → HIGH → MEDIUM → LOW，同级按影响面）
 
@@ -86,14 +87,15 @@ out of this skill's scope — the task list is the deliverable.
 7. **Not generating the layered documents.** 没有综述/结构/子项目文档，整改清单就失去上下文。
 8. **只读代码不读 schema。** 查"代码用了不存在的表/字段"必须先有 schema 真源清单（迁移/DDL/实体），否则只能靠印象猜。
 9. **多端只看一端。** 多端一致性要求逐端比对同一规则（前端/服务端各算一遍是典型漂移源）。
-10. **把不适用的条件节当成"已查无问题"。** 无数据库/单端项目，条件节标 N/A 而非 clean。
+10. **把不适用的条件节当成"已查无问题"。** 无数据库/单端/无 UI 项目，条件节标 N/A 而非 clean。
+11. **把"文案读起来奇怪"当主观评价。** 必须按 D6 的 A/B/C/D 四类逐条判定并给出改写后文案。
 11. **Mixing auxiliary tooling into core.** Dev-only scripts bundled inside the main binary rather than as standalone scripts in `scripts/` — extract them out.
 
 ---
 
 ## Verification Checklist
 
-- [ ] **Phase 0 完成且用户已确认**：项目定位（在线/本地/混合）、**有无数据库 + 端清单**、排除目录、架构原则
+- [ ] **Phase 0 完成且用户已确认**：项目定位（在线/本地/混合）、**有无数据库 + 端清单 + 有无用户可见文本**、排除目录、架构原则
 - [ ] **Audit Scope = Phase 0 确认的范围** — not limited to recent commits or diff
 - [ ] Todo list created with D1–D8 at audit start
 - [ ] Each pass's reference file loaded BEFORE auditing that pass
@@ -106,5 +108,6 @@ out of this skill's scope — the task list is the deliverable.
 - [ ] 定位=本地：【本地】标注项已查（内存泄露/事件退订/Dispose、闪退/未处理异常、UI 阻塞）
 - [ ] **有数据库时**：`SCHEMA.md` 已产出，D4 三节已执行（设计合理性、僵尸表/僵尸字段、代码-Schema 漂移）
 - [ ] **多端时**：`ENDS.md` 已产出，D5 多端一致性已执行（每条规则有各端实现位置与是否一致结论）
-- [ ] **不适用项标 N/A**（无数据库/单端），未当成 clean
+- [ ] **有用户可见文本时**：`COPY.md` 已产出，D6 UI 文案节已执行（逐条三问判定 + 改写后文案）
+- [ ] **不适用项标 N/A**（无数据库/单端/无 UI），未当成 clean
 - [ ] Audit document generated，任务按重要性排序，每项有唯一 ID 与 status
