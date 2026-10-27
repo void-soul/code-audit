@@ -26,6 +26,7 @@ Process failures, not code failures. The "how did this get merged?" layer.
 - [ ] 注释列举的参数/分支与实际签名/分支不符
 - [ ] 注释提到的文件名、类名、事件名在代码中不存在（改代码没改注释）
 - [ ] TODO/FIXME 旁的代码已实现该 TODO；过时注释 → MEDIUM
+- [ ] **多端同一业务规则实现不一致**（前端与服务端各算一遍）→ 详见 D5 Multi-End Consistency
 
 ## Configuration 【通用】
 

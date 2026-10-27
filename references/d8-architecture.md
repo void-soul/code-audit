@@ -158,6 +158,7 @@ pip install similard && similard src/      # or dupfinder
 - 两个高度相似块（> 80%）→ MEDIUM；轻度相似（60-80%）→ LOW
 - The same error-handling pattern copied multiple times
 - Similar validation logic scattered across the codebase
+- **多端重复实现同一业务规则**（前端/客户端各写一份金额、权限、状态判断）→ 除比对一致性（D5）外，还应评估能否下沉为共享真源（服务端计算 + 端侧仅展示）
 
 ---
 
