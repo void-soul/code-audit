@@ -43,6 +43,8 @@ docs/audit/AUDIT-<YYYYMMDD>-<scope>/PROGRESS.md
 ## 定位与范围（Phase 0 结论）
 - **项目定位**: 在线 / 本地 / 混合（逐子项目标注）
 - **标注项过滤**: 查【在线】跳【本地】 / 查【本地】跳【在线】 / 混合逐子项目
+- **是否有数据库**: 有（类型 + schema 真源位置）/ 无 → 无则 D4 数据库三节标 N/A
+- **端清单**: 服务端 / Web / 桌面 / 移动 / CLI / 其他（≥2 端才执行 D5 多端一致性）
 - **审计范围**: <目录/子项目清单>
 - **排除目录**: <目录 + 理由>
 - **架构原则**: <用户确认的原则>
@@ -60,6 +62,8 @@ docs/audit/AUDIT-<YYYYMMDD>-<scope>/PROGRESS.md
 | Phase 2 / D3 ~ D8 | ... | |
 | Phase 3 / OVERVIEW.md | ... | |
 | Phase 3 / STRUCTURE.md | ... | |
+| Phase 3 / SCHEMA.md | ... | 仅"有数据库" |
+| Phase 3 / ENDS.md | ... | 仅"多端" |
 | Phase 3 / SUBPROJECT-*.md | ... | 逐个子项目勾选 |
 | Phase 4 审计总文档 | ... | |
 
@@ -76,6 +80,8 @@ docs/audit/AUDIT-<YYYYMMDD>-<scope>/PROGRESS.md
 
 - [ ] OVERVIEW.md
 - [ ] STRUCTURE.md
+- [ ] SCHEMA.md（仅有数据库时）
+- [ ] ENDS.md（仅多端时）
 - [ ] SUBPROJECT-<name>.md（逐个列出）
 - [ ] AUDIT-<YYYYMMDD>-<scope>.md
 ```
